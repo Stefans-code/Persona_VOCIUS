@@ -28,6 +28,8 @@ def get_hwid():
                     detected_id = output.split("=")[1].strip().replace('"', '')
             except: pass
         elif system == "Linux":
+            if os.path.exists("/etc/machine-id"):
+                with open("/etc/machine-id", "r") as f: detected_id = f.read().strip()
     except Exception:
         pass
     

@@ -1,0 +1,25 @@
+# AI Models & Large Folders
+model_cache/
+models/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+.Python
+env/
+venv/
+.venv/
+build/
+dist/
+
+# Application Data
+*.db
+*.log
+license.vocius
+
+# OS specific
+.DS_Store
+Thumbs.db

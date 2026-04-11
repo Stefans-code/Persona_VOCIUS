@@ -1,0 +1,10 @@
+customtkinter
+faster-whisper
+pyjwt
+torch
+# For high-end UI icons
+Pillow
+# For Video Player in Detail View
+ffpyplayer
+# Optional for universal GPU support
+# torch-directml

@@ -1,0 +1,25 @@
+CONTRATTO DI LICENZA CON L'UTENTE FINALE (EULA) - VOCIUS
+
+Il presente Contratto di Licenza con l'Utente Finale ("Contratto") è un accordo legale tra l'utente (persona fisica o giuridica) e Stefano Zanoni ("Editore") per il software Vocius ("Software").
+
+Installando o utilizzando il Software, l'utente accetta di essere vincolato dai termini del presente Contratto. Se l'utente non accetta i termini del presente Contratto, non deve installare o utilizzare il Software.
+
+1. CONCESSIONE DELLA LICENZA
+L'Editore concede all'utente una licenza non esclusiva e non trasferibile per installare e utilizzare il Software sul proprio computer per finalità di trascrizione e gestione audio.
+
+2. RESTRIZIONI
+L'utente non può:
+a) Decodificare, decompilare o disassemblare il Software (salvo quanto espressamente consentito dalla legge applicabile).
+b) Distribuire, noleggiare, concedere in sublicenza o prestare il Software a terzi senza previo consenso scritto dell'Editore.
+c) Rimuovere o alterare qualsiasi avviso di copyright o marchio registrato.
+
+3. PROPRIETÀ INTELLETTUALE
+Il Software è protetto dalle leggi sul copyright e dai trattati internazionali. Il Software viene concesso in licenza, non venduto. Tutti i diritti, titoli e interessi relativi al Software rimangono di proprietà di Stefano Zanoni.
+
+4. LIMITAZIONE DI RESPONSABILITÀ
+Il Software viene fornito "così com'è", senza garanzie di alcun tipo. In nessun caso l'Editore sarà responsabile per danni derivanti dall'uso o dall'impossibilità di usare il Software.
+
+5. LEGGE APPLICABILE
+Il presente Contratto è regolato dalle leggi dello Stato Italiano.
+
+Copyright (c) 2026 Stefano Zanoni. Tutti i diritti riservati.

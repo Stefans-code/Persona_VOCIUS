@@ -11,25 +11,27 @@ LICENSE_SECRET = os.environ.get("VOCIUS_LICENSE_SECRET", "vocius_offline_secure_
 
 def get_hwid():
     """Detects a persistent hardware ID for the current machine."""
-    # On desktop, we prefer the system UUID
     system = platform.system()
     detected_id = ""
     try:
         if system == "Windows":
             cmd = "wmic csproduct get uuid 2>nul"
-            output = subprocess.check_output(cmd, shell=True).decode().split("\n")
-            if len(output) > 1: detected_id = output[1].strip()
+            try:
+                output = subprocess.check_output(cmd, shell=True).decode().split("\n")
+                if len(output) > 1:
+                    detected_id = output[1].strip()
+            except: pass
         elif system == "Darwin": # macOS
             cmd = "ioreg -rd1 -c IOPlatformExpertDevice | grep -i 'UUID'"
             try:
                 output = subprocess.check_output(cmd, shell=True).decode()
-                # Esempio output: | "IOPlatformUUID" = "12345678-ABCD-EFGH-IJKL-MN1234567890"
                 if "=" in output:
                     detected_id = output.split("=")[1].strip().replace('"', '')
             except: pass
         elif system == "Linux":
             if os.path.exists("/etc/machine-id"):
-                with open("/etc/machine-id", "r") as f: detected_id = f.read().strip()
+                with open("/etc/machine-id", "r") as f:
+                    detected_id = f.read().strip()
     except Exception:
         pass
     

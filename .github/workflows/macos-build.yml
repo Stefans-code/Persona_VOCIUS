@@ -71,6 +71,5 @@ jobs:
       with:
         name: Vocius-Persona-macOS
         path: |
-          dist/Vocius_Persona_macOS.zip
           dist/Vocius-Persona.dmg
         retention-days: 5

@@ -36,7 +36,7 @@ jobs:
         python -c "
         from huggingface_hub import snapshot_download
         import os
-        models = ['large-v3', 'medium', 'tiny']
+        models = ['tiny']
         for m in models:
             print(f'Downloading {m}...')
             snapshot_download(

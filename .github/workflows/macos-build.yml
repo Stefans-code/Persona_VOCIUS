@@ -73,14 +73,3 @@ jobs:
         path: |
           dist/Vocius-Persona.dmg
         retention-days: 5
-
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      with:
-        files: dist/Vocius-Persona.dmg
-        name: Vocius Persona Mac Latest
-        tag_name: latest
-        body: "Automated build of Vocius Persona for macOS."
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

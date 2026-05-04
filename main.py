@@ -412,6 +412,45 @@ class VociusPersonaApp(ctk.CTk):
 
         ctk.CTkButton(lic_card, text="Carica File Licenza (.vocius)", command=self.save_license_file).pack(fill="x", padx=20, pady=20)
 
+        # Aggiornamenti
+        upd_card = ctk.CTkFrame(view, fg_color=COLORS["card_bg"], corner_radius=16, border_width=1, border_color=COLORS["border"])
+        upd_card.grid(row=3, column=0, sticky="ew", pady=10)
+        ctk.CTkLabel(upd_card, text="AGGIORNAMENTI", font=("Inter", 11, "bold"), text_color=COLORS["text_sec"]).pack(anchor="w", padx=20, pady=(20, 10))
+        ctk.CTkLabel(upd_card, text="Versione corrente: v1.0.0", font=("Inter", 13)).pack(anchor="w", padx=20)
+        self.btn_check_upd = ctk.CTkButton(upd_card, text="Verifica Aggiornamenti", font=("Inter", 13, "bold"), fg_color=COLORS["primary"], command=self.check_software_updates)
+        self.btn_check_upd.pack(fill="x", padx=20, pady=20)
+
+    def check_software_updates(self):
+        import urllib.request
+        import json
+        import webbrowser
+        self.btn_check_upd.configure(state="disabled", text="Verifica in corso...")
+        
+        def check_upd_bg():
+            current_version = "1.0.0"
+            try:
+                url = "https://nexflamma.net/vocius_version.json"
+                req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    data = json.loads(response.read().decode())
+                    remote_version = data.get("version", "1.0.0")
+                    download_url = data.get("download_url", "")
+                    changelog = data.get("changelog", "Miglioramenti generali.")
+
+                    self.after(0, lambda: self.btn_check_upd.configure(state="normal", text="Verifica Aggiornamenti"))
+                    
+                    if remote_version > current_version:
+                        msg = f"Una nuova versione di Vocius è disponibile: v{remote_version}!\n\nChangelog:\n{changelog}\n\nVuoi scaricarla ora?"
+                        if messagebox.askyesno("Nuovo Aggiornamento Disponibile", msg):
+                            webbrowser.open(download_url)
+                    else:
+                        self.after(0, lambda: messagebox.showinfo("Aggiornamenti", f"Il software è aggiornato alla versione più recente (v{current_version})!"))
+            except Exception as e:
+                self.after(0, lambda: self.btn_check_upd.configure(state="normal", text="Verifica Aggiornamenti"))
+                self.after(0, lambda: messagebox.showerror("Errore", f"Impossibile verificare gli aggiornamenti: {e}"))
+
+        threading.Thread(target=check_upd_bg, daemon=True).start()
+
     def save_license_file(self):
         path = filedialog.askopenfilename(filetypes=[("Vocius License", "*.vocius")])
         if path:

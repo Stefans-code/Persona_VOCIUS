@@ -1,4 +1,4 @@
-name: Build macOS Application
+name: Build macOS Universal DMG
 
 on:
   push:
@@ -6,34 +6,41 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-macos:
-    runs-on: macos-latest
-
+  build:
+    strategy:
+      matrix:
+        include:
+          - runner: macos-14
+            arch: Intel
+            prefix: "arch -x86_64"
+          - runner: macos-14
+            arch: AppleSilicon
+            prefix: ""
+    runs-on: ${{ matrix.runner }}
+    
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Python 3.11
+    
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: "3.11"
+        python-version: '3.11'
         cache: 'pip'
-
+        
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install pyinstaller Cython setuptools customtkinter faster-whisper Pillow ffpyplayer pyjwt torch torchvision torchaudio ctranslate2
-
+        ${{ matrix.prefix }} python -m pip install --upgrade pip
+        ${{ matrix.prefix }} pip install pyinstaller Cython setuptools customtkinter faster-whisper Pillow ffpyplayer pyjwt torch torchvision torchaudio ctranslate2
+        
     - name: Create core binaries with Cython
       run: |
-        python setup_cython.py build_ext --inplace
+        ${{ matrix.prefix }} python setup_cython.py build_ext --inplace
         echo "✅ Cython compilation successful"
-        # Rimuoviamo i sorgenti originali per sicurezza (opzionale nel bundle PyInstaller)
-        # find core -name "*.py" -delete
-
+        
     - name: Download Whisper Models
       run: |
         mkdir -p model_cache/whisper
-        python -c "
+        ${{ matrix.prefix }} python -c "
         from huggingface_hub import snapshot_download
         import os
         models = ['tiny']
@@ -54,22 +61,60 @@ jobs:
           mkdir -p assets
           cp assets/icon.ico assets/icon.icns || touch assets/icon.icns
         fi
-        python -m PyInstaller vocius_persona_macos.spec --noconfirm
+        ${{ matrix.prefix }} python -m PyInstaller vocius_persona_macos.spec --noconfirm
 
     - name: Compress App Bundle
       run: |
         cd dist
-        zip -r "Vocius_Persona_macOS.zip" "Vocius Persona.app"
+        tar -czf ../Vocius_Persona_${{ matrix.arch }}.tar.gz "Vocius Persona.app"
 
-    - name: Create DMG Disk Image
-      run: |
-        hdiutil create -volname "Vocius Persona" -srcfolder "dist/Vocius Persona.app" -ov -format UDZO "dist/Vocius-Persona.dmg"
-        echo "✅ DMG created successfully"
-
-    - name: Upload Artifact
+    - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Vocius-Persona-macOS
-        path: |
-          dist/Vocius-Persona.dmg
-        retention-days: 5
+        name: Vocius-Persona-app-${{ matrix.arch }}
+        path: Vocius_Persona_${{ matrix.arch }}.tar.gz
+
+  package:
+    needs: build
+    runs-on: macos-latest
+    steps:
+    - name: Download Intel Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Vocius-Persona-app-Intel
+
+    - name: Download AppleSilicon Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: Vocius-Persona-app-AppleSilicon
+
+    - name: Extract and Rename App Bundles
+      run: |
+        mkdir -p dmg_folder
+        tar -xzf Vocius_Persona_Intel.tar.gz -C dmg_folder
+        mv "dmg_folder/Vocius Persona.app" "dmg_folder/Vocius Persona (Intel).app"
+        
+        tar -xzf Vocius_Persona_AppleSilicon.tar.gz -C dmg_folder
+        mv "dmg_folder/Vocius Persona.app" "dmg_folder/Vocius Persona (Apple Silicon).app"
+
+    - name: Create Single Universal DMG
+      run: |
+        brew install create-dmg
+        create-dmg \
+          --volname "Vocius Persona Installer" \
+          --window-pos 200 120 \
+          --window-size 650 450 \
+          --icon-size 100 \
+          --icon "Vocius Persona (Apple Silicon).app" 150 150 \
+          --icon "Vocius Persona (Intel).app" 350 150 \
+          --hide-extension "Vocius Persona (Apple Silicon).app" \
+          --hide-extension "Vocius Persona (Intel).app" \
+          --app-drop-link 550 150 \
+          "Vocius_Persona_macOS_Universal.dmg" \
+          "dmg_folder"
+
+    - name: Upload Universal DMG Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Vocius-Persona-macOS-Universal-DMG
+        path: Vocius_Persona_macOS_Universal.dmg

@@ -47,15 +47,15 @@ def detect_hardware():
         }
     
     # 3. Windows DirectML (AMD/Intel GPU)
+    # NOTA: faster-whisper si basa su CTranslate2, che supporta SOLO "cpu" e "cuda".
+    # DirectML non è utilizzabile come device per la trascrizione: le GPU AMD/Intel
+    # ricadono quindi su CPU (passare un device DirectML manderebbe in crash il modello).
     elif HAS_DIRECTML and torch_directml.is_available():
-        device = torch_directml.device()
-        compute_type = "float32"
-        label = "GPU Universale (DirectML)"
         return {
-            "device": device,
-            "compute_type": compute_type,
-            "label": label,
-            "type": "directml"
+            "device": "cpu",
+            "compute_type": "int8",
+            "label": "CPU (GPU AMD/Intel non supportata dal motore)",
+            "type": "cpu"
         }
     
     # 4. Fallback to CPU
@@ -71,13 +71,13 @@ def detect_hardware():
         }
 
 def get_recommended_model(hw_info):
-    """Suggests a model based on hardware capabilities."""
+    """Suggests a model based on hardware capabilities.
+    Restituisce i nomi interni Vocarium: maxima / media / minima."""
     hw_type = hw_info["type"]
-    
+
     if hw_type == "cuda":
-        # If we have a good GPU, large-v3 is usually fine
-        return "large-v3"
-    elif hw_type == "directml":
-        return "medium"
+        # GPU Nvidia: il modello pesante va benissimo
+        return "zeus"
     else:
-        return "base"
+        # CPU / GPU non-CUDA: meglio il modello leggero
+        return "hermes"

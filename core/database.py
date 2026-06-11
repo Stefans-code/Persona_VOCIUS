@@ -1,23 +1,17 @@
 import sqlite3
 import os
-import platform
 from datetime import datetime
 
 class VociusDatabase:
     def __init__(self, db_path=None):
         if db_path is None:
-            # Rilevamento piattaforma per percorsi persistenti
-            system = platform.system()
-            if system == "Windows":
-                app_data = os.environ.get('APPDATA')
-                if not app_data:
-                    app_data = os.path.expanduser("~\\AppData\\Roaming")
-                base_dir = os.path.abspath(os.path.join(app_data, "VociusPersona"))
-            elif system == "Darwin": # macOS
-                base_dir = os.path.expanduser("~/Library/Application Support/VociusPersona")
-            else: # Linux o altro
-                base_dir = os.path.expanduser("~/.vociuspersona")
+            # Reindirizziamo il database in AppData per evitare errori di permessi in Program Files
+            app_data = os.environ.get('APPDATA')
+            if not app_data:
+                # Fallback estremo se APPDATA non è definita
+                app_data = os.path.expanduser("~\\AppData\\Roaming")
             
+            base_dir = os.path.abspath(os.path.join(app_data, "VociusPersona"))
             if not os.path.exists(base_dir):
                 try:
                     os.makedirs(base_dir, exist_ok=True)
@@ -96,7 +90,7 @@ class VociusDatabase:
         defaults = [
             ("output_path", "transcriptions"),
             ("watch_folder_path", "upload"),
-            ("preferred_model", "large-v3"),
+            ("preferred_model", "zeus"),
             ("theme", "light")
         ]
         for key, val in defaults:
@@ -208,12 +202,21 @@ class VociusDatabase:
         conn.commit()
         conn.close()
 
-    def update_file_status(self, file_id, status, txt_path=None, srt_path=None):
+    def update_file_status(self, file_id, status, txt_path=None, srt_path=None, duration=None):
         conn = sqlite3.connect(self.db_path)
         cur = conn.cursor()
-        if txt_path and srt_path:
-            cur.execute("UPDATE processed_files SET status = ?, transcription_path_txt = ?, transcription_path_srt = ? WHERE id = ?", (status, txt_path, srt_path, file_id))
-        else:
-            cur.execute("UPDATE processed_files SET status = ? WHERE id = ?", (status, file_id))
+        fields = ["status = ?"]
+        params = [status]
+        if txt_path is not None:
+            fields.append("transcription_path_txt = ?")
+            params.append(txt_path)
+        if srt_path is not None:
+            fields.append("transcription_path_srt = ?")
+            params.append(srt_path)
+        if duration is not None:
+            fields.append("duration = ?")
+            params.append(duration)
+        params.append(file_id)
+        cur.execute(f"UPDATE processed_files SET {', '.join(fields)} WHERE id = ?", params)
         conn.commit()
         conn.close()

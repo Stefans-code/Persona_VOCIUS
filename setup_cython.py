@@ -8,7 +8,8 @@ core_modules = [
     "core/hardware.py",
     "core/licensing.py",
     "core/transcriber.py",
-    "core/watcher.py"
+    "core/watcher.py",
+    "core/diarizer.py"
 ]
 
 setup(
@@ -19,5 +20,5 @@ setup(
     ),
 )
 
-print("\n✅ Compilazione completata!")
-print("💡 Ora puoi rimuovere i file .py nella cartella core (tieni solo i .pyd o .so) per la distribuzione.")
+print("\n[OK] Compilazione completata!")
+print("[INFO] Ora puoi rimuovere i file .py nella cartella core (tieni solo i .pyd o .so) per la distribuzione.")

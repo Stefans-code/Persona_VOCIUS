@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         ${{ matrix.prefix }} python -m pip install --upgrade pip
-        ${{ matrix.prefix }} pip install pyinstaller Cython setuptools customtkinter faster-whisper Pillow ffpyplayer pyjwt torch torchvision torchaudio ctranslate2
+        ${{ matrix.prefix }} pip install pyinstaller Cython setuptools customtkinter faster-whisper Pillow ffpyplayer pyjwt torch torchvision torchaudio ctranslate2 pyannote-audio asteroid-filterbanks pytorch-lightning
         
     - name: Create core binaries with Cython
       run: |
@@ -61,7 +61,27 @@ jobs:
           mkdir -p assets
           cp assets/icon.ico assets/icon.icns || touch assets/icon.icns
         fi
+        
+        # Spostiamo i file .py di core per proteggere il codice
+        mkdir core_backup
+        for f in database hardware licensing transcriber watcher diarizer; do
+          if [ -f core/$f.py ]; then
+            mv core/$f.py core_backup/
+          fi
+        done
+        echo "🔒 Nascosti i file sorgente .py in core_backup/"
+
+        # Esecuzione PyInstaller
         ${{ matrix.prefix }} python -m PyInstaller vocius_persona_macos.spec --noconfirm
+
+        # Ripristiniamo i file .py originali
+        if [ -d core_backup ] && [ "$(ls -A core_backup)" ]; then
+          mv core_backup/*.py core/
+          rmdir core_backup
+          echo "🔄 Ripristinati i file sorgente .py in core/"
+        else
+          [ -d core_backup ] && rmdir core_backup
+        fi
 
     - name: Compress App Bundle
       run: |

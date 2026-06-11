@@ -8,8 +8,8 @@ from datetime import datetime
 from PIL import Image, ImageTk
 
 import sys
-from core.licensing import verify_license, get_hwid
-from core.hardware import detect_hardware
+from core.licensing import verify_license, get_hwid, get_license_path
+from core.hardware import detect_hardware, get_recommended_model
 from core.transcriber import VociusTranscriber
 from core.database import VociusDatabase
 from core.watcher import VociusWatcher
@@ -47,20 +47,11 @@ class VociusPersonaApp(ctk.CTk):
         self.geometry("1100x755")
         self.configure(fg_color=COLORS["bg_main"])
         
-        # Icona - Cross-platform
-        system = platform.system()
-        if system == "Darwin":
-            icon_name = "icon.icns"
-        else:
-            icon_name = "icon.ico"
-            
-        icon_path = get_resource_path(os.path.join("assets", icon_name))
-        
+        # Icona
+        icon_path = get_resource_path(os.path.join("assets", "icon.ico"))
         if os.path.exists(icon_path):
-            if system == "Windows":
-                try: self.iconbitmap(icon_path)
-                except: pass
-            # Su Mac l'icona è gestita dal bundle .app tramite lo spec file
+            try: self.iconbitmap(icon_path)
+            except: pass
 
         # --- STATE ---
         self.db = VociusDatabase()
@@ -69,6 +60,7 @@ class VociusPersonaApp(ctk.CTk):
         self.lic_details = None
         self.hw_info = None
         self.transcriber = None
+        self.transcription_lock = threading.Lock()  # una trascrizione alla volta (il motore non è thread-safe)
         self.nav_btns = {}
         self.active_folder_id = None 
         self.selected_file_ids = set() 
@@ -95,8 +87,18 @@ class VociusPersonaApp(ctk.CTk):
         self.select_view("dashboard")
 
     def update_license_state(self):
-        self.is_licensed, self.lic_msg, self.lic_details = verify_license()
+        # verify_license fa I/O di rete (validazione online): eseguilo in un thread
+        # per non congelare la UI all'avvio.
+        def _work():
+            result = verify_license()
+            self.after(0, lambda: self._apply_license_state(result))
+        threading.Thread(target=_work, daemon=True).start()
+
+    def _apply_license_state(self, result):
+        self.is_licensed, self.lic_msg, self.lic_details = result
         self.setup_sidebar()
+        if getattr(self, "_current_view_id", None) == "settings":
+            self.view_settings()
 
     def setup_sidebar(self):
         if hasattr(self, "sidebar"): self.sidebar.destroy()
@@ -274,10 +276,14 @@ class VociusPersonaApp(ctk.CTk):
         
         def save():
             name = entry.get().strip()
-            if name:
-                self.db.add_folder(name)
-                self.setup_sidebar()
-                modal.destroy()
+            if not name:
+                return
+            fid = self.db.add_folder(name)
+            if fid is None:
+                messagebox.showwarning("Vocius", "Esiste già una cartella con questo nome.")
+                return
+            self.setup_sidebar()
+            modal.destroy()
         
         btn_save = ctk.CTkButton(modal, text="Crea Cartella", fg_color=COLORS["primary"], height=40, command=save)
         btn_save.pack(pady=10)
@@ -353,8 +359,19 @@ class VociusPersonaApp(ctk.CTk):
         lang_menu.grid(row=1, column=0, sticky="ew", padx=(0, 10), pady=5)
         
         ctk.CTkLabel(opt_frame, text="Modello", font=("Inter", 12)).grid(row=0, column=1, sticky="w")
-        model_menu = ctk.CTkOptionMenu(opt_frame, values=["Large v3 (Migliore)", "Medium", "Base"], fg_color="#F8F9FA", text_color=COLORS["text"], button_color="#F8F9FA", height=38)
+        model_menu = ctk.CTkOptionMenu(opt_frame, values=["Vocius Zeus (Pesante)", "Vocius Hermes (Leggero)"], fg_color="#F8F9FA", text_color=COLORS["text"], button_color="#F8F9FA", height=38)
         model_menu.grid(row=1, column=1, sticky="ew", pady=5)
+
+        # Preseleziona il modello consigliato per l'hardware rilevato
+        rec_model = get_recommended_model(self.hw_info) if self.hw_info else "zeus"
+        rec_label = {"zeus": "Vocius Zeus (Pesante)", "hermes": "Vocius Hermes (Leggero)"}.get(rec_model)
+        if rec_label:
+            model_menu.set(rec_label)
+
+        # Diarizzazione (riconoscimento interlocutori)
+        diarize_var = tk.BooleanVar(value=False)
+        ctk.CTkCheckBox(modal, text="Riconosci interlocutori (diarizzazione)", variable=diarize_var,
+                        font=("Inter", 12), border_width=2).pack(anchor="w", padx=40, pady=(10, 0))
 
         # Folder Selection (Keep it but styled)
         ctk.CTkLabel(modal, text="Sposta in cartella (Opzionale)", font=("Inter", 12)).pack(anchor="w", padx=40)
@@ -378,10 +395,18 @@ class VociusPersonaApp(ctk.CTk):
             
             fname = self.folder_choice.get()
             fid = next((f[0] for f in folders if f[1] == fname), None)
+
+            # Applica davvero lingua e modello scelti nel modal
+            lang_map = {"Italiano IT": "it", "English EN": "en"}
+            language = lang_map.get(lang_menu.get())  # None = rilevamento automatico
+            model_map = {"Vocius Zeus (Pesante)": "zeus", "Vocius Hermes (Leggero)": "hermes"}
+            model_size = model_map.get(model_menu.get(), "zeus")
+            diarize = diarize_var.get()
+
             path = self.selected_file_path
             modal.destroy()
             self.selected_file_path = None
-            job_id = self.start_transcription_job(path, folder_id=fid)
+            job_id = self.start_transcription_job(path, folder_id=fid, language=language, model_size=model_size, diarize=diarize)
             self.select_view(f"detail_{job_id}")
 
         btn_start = ctk.CTkButton(actions, text="Avvia Trascrizione", font=("Inter", 14, "bold"), fg_color=COLORS["primary"], height=44, corner_radius=8, command=start)
@@ -406,9 +431,12 @@ class VociusPersonaApp(ctk.CTk):
         lic_card = ctk.CTkFrame(view, fg_color=COLORS["card_bg"], corner_radius=16, border_width=1, border_color=COLORS["border"])
         lic_card.grid(row=2, column=0, sticky="ew", pady=10)
         ctk.CTkLabel(lic_card, text="LICENZA", font=("Inter", 11, "bold"), text_color=COLORS["text_sec"]).pack(anchor="w", padx=20, pady=(20, 10))
-        ctk.CTkLabel(lic_card, text=f"Stato: {self.lic_msg}", font=("Inter", 14, "bold"), text_color=COLORS["status_ok"] if self.is_licensed else COLORS["danger"]).pack(anchor="w", padx=20)
-        ctk.CTkLabel(lic_card, text=f"Scadenza: {self.lic_details['expiry']}", font=("Inter", 12)).pack(anchor="w", padx=20, pady=5)
-        ctk.CTkLabel(lic_card, text=f"HWID: {self.lic_details['hwid']}", font=("Inter", 10), text_color=COLORS["text_sec"]).pack(anchor="w", padx=20)
+        lic_status = self.lic_msg or "Verifica in corso..."
+        lic_expiry = self.lic_details["expiry"] if self.lic_details else "N/D"
+        lic_hwid = self.lic_details["hwid"] if self.lic_details else get_hwid()
+        ctk.CTkLabel(lic_card, text=f"Stato: {lic_status}", font=("Inter", 14, "bold"), text_color=COLORS["status_ok"] if self.is_licensed else COLORS["danger"]).pack(anchor="w", padx=20)
+        ctk.CTkLabel(lic_card, text=f"Scadenza: {lic_expiry}", font=("Inter", 12)).pack(anchor="w", padx=20, pady=5)
+        ctk.CTkLabel(lic_card, text=f"HWID: {lic_hwid}", font=("Inter", 10), text_color=COLORS["text_sec"]).pack(anchor="w", padx=20)
 
         ctk.CTkButton(lic_card, text="Carica File Licenza (.vocius)", command=self.save_license_file).pack(fill="x", padx=20, pady=20)
 
@@ -426,6 +454,10 @@ class VociusPersonaApp(ctk.CTk):
         import webbrowser
         self.btn_check_upd.configure(state="disabled", text="Verifica in corso...")
         
+        def _ver(v):
+            import re
+            return tuple(int(x) for x in re.findall(r"\d+", str(v)))
+
         def check_upd_bg():
             current_version = "1.0.0"
             try:
@@ -439,7 +471,7 @@ class VociusPersonaApp(ctk.CTk):
 
                     self.after(0, lambda: self.btn_check_upd.configure(state="normal", text="Verifica Aggiornamenti"))
                     
-                    if remote_version > current_version:
+                    if _ver(remote_version) > _ver(current_version):
                         msg = f"Una nuova versione di Vocius è disponibile: v{remote_version}!\n\nChangelog:\n{changelog}\n\nVuoi scaricarla ora?"
                         if messagebox.askyesno("Nuovo Aggiornamento Disponibile", msg):
                             webbrowser.open(download_url)
@@ -453,13 +485,26 @@ class VociusPersonaApp(ctk.CTk):
 
     def save_license_file(self):
         path = filedialog.askopenfilename(filetypes=[("Vocius License", "*.vocius")])
-        if path:
-            import shutil
-            shutil.copy(path, "license.vocius")
-            self.update_license_state()
-            self.setup_sidebar()
-            self.view_settings()
-            messagebox.showinfo("Vocius", "Licenza attiva!")
+        if not path:
+            return
+        import shutil
+        try:
+            shutil.copy(path, get_license_path())
+        except Exception as e:
+            messagebox.showerror("Vocius", f"Impossibile salvare la licenza: {e}")
+            return
+
+        # Verifica in background per non bloccare la UI; mostra l'esito reale.
+        def _work():
+            result = verify_license()
+            def _apply():
+                self._apply_license_state(result)
+                if result[0]:
+                    messagebox.showinfo("Vocius", "Licenza attiva!")
+                else:
+                    messagebox.showerror("Vocius", f"Licenza non valida: {result[1]}")
+            self.after(0, _apply)
+        threading.Thread(target=_work, daemon=True).start()
 
     def create_block_empty(self, parent, title, row):
         card = ctk.CTkFrame(parent, fg_color=COLORS["card_bg"], corner_radius=16, border_width=1, border_color=COLORS["border"])
@@ -533,17 +578,23 @@ class VociusPersonaApp(ctk.CTk):
             ctk.CTkLabel(trans_card, text="Il file è in fase di trascrizione. Rimarrai su questa pagina fino al completamento.", font=("Inter", 11), text_color=COLORS["text_sec"]).pack(pady=(0, 30))
         
         elif data['transcription_path_txt'] and os.path.exists(data['transcription_path_txt']):
+            import re
             with open(data['transcription_path_txt'], 'r', encoding='utf-8') as f:
                 lines = f.readlines()
                 for line in lines:
                     if line.strip():
+                        # Formato riga: "[HH:MM:SS] Speaker N: testo"
+                        m = re.match(r'^\[(\d{2}:\d{2}:\d{2})\]\s*(?:[^:]+:\s*)?(.*)$', line.strip())
+                        timecode = m.group(1) if m else ""
+                        text = m.group(2) if m else line.strip()
+
                         seg = ctk.CTkFrame(trans_card, fg_color="transparent")
                         seg.pack(fill="x", padx=10, pady=10)
-                        
+
                         # Timecode column
-                        ctk.CTkLabel(seg, text="00:00:02,165", font=("Inter", 11), text_color=COLORS["text_sec"], width=100).pack(side="left")
+                        ctk.CTkLabel(seg, text=timecode, font=("Inter", 11), text_color=COLORS["text_sec"], width=100).pack(side="left")
                         # Text column
-                        ctk.CTkLabel(seg, text=line.strip(), font=("Inter", 13), wraplength=550, justify="left", text_color=COLORS["text"]).pack(side="left", fill="x", expand=True, padx=20)
+                        ctk.CTkLabel(seg, text=text, font=("Inter", 13), wraplength=550, justify="left", text_color=COLORS["text"]).pack(side="left", fill="x", expand=True, padx=20)
                         ctk.CTkFrame(trans_card, height=1, fg_color=COLORS["border"]).pack(fill="x", padx=20)
         else:
             ctk.CTkLabel(trans_card, text="Nessuna trascrizione trovata.", font=("Inter", 13, "italic"), text_color=COLORS["text_sec"]).pack(pady=40)
@@ -567,11 +618,11 @@ class VociusPersonaApp(ctk.CTk):
         btn_dl = ctk.CTkButton(export_card, text="Scarica", font=("Inter", 14, "bold"), fg_color=COLORS["primary"], height=42, command=lambda: messagebox.showinfo("Esporta", f"Download avviato: {fmt_menu.get()}"))
         btn_dl.pack(fill="x", padx=20, pady=(10, 20))
 
-    def start_transcription_job(self, path, folder_id=None):
+    def start_transcription_job(self, path, folder_id=None, language=None, model_size=None, diarize=False):
         name = os.path.basename(path)
-        fid = self.db.add_file(name, path, "", "", os.path.splitext(path)[1][1:], 0, "it")
+        fid = self.db.add_file(name, path, "", "", os.path.splitext(path)[1][1:], 0, language or "it")
         if folder_id: self.db.move_file_to_folder(fid, folder_id)
-        
+
         def run_task():
             def update_ui_prog(pct, msg):
                 self.jobs_progress[fid] = (pct, msg)
@@ -579,24 +630,39 @@ class VociusPersonaApp(ctk.CTk):
                 self.after(0, self.refresh_if_active, fid)
 
             try:
-                if not self.transcriber: self.transcriber = VociusTranscriber(device=self.hw_info["device"], compute_type=self.hw_info["compute_type"])
-                results, info = self.transcriber.transcribe(path, progress_cb=update_ui_prog)
+                # Una sola trascrizione alla volta: il motore non è thread-safe.
+                with self.transcription_lock:
+                    if self.hw_info is None:
+                        self.hw_info = detect_hardware()
+                    target_model = model_size or "zeus"
+                    # (Ri)crea il transcriber se non esiste o se è cambiato il modello scelto
+                    if (self.transcriber is None) or (self.transcriber.model_size != target_model):
+                        self.transcriber = VociusTranscriber(
+                            model_size=target_model,
+                            device=self.hw_info["device"],
+                            compute_type=self.hw_info["compute_type"]
+                        )
+                    results, info = self.transcriber.transcribe(path, language=language, progress_cb=update_ui_prog, diarize=diarize)
+
                 out_dir = self.db.get_setting("output_path", "transcriptions")
-                if not os.path.exists(out_dir): os.makedirs(out_dir)
-                
-                txt_p = os.path.join(out_dir, f"{name}.txt"); srt_p = os.path.join(out_dir, f"{name}.srt")
+                if not os.path.exists(out_dir): os.makedirs(out_dir, exist_ok=True)
+
+                # Prefisso con l'id per evitare collisioni tra file con lo stesso nome
+                safe_base = f"{fid}_{name}"
+                txt_p = os.path.join(out_dir, f"{safe_base}.txt"); srt_p = os.path.join(out_dir, f"{safe_base}.srt")
                 self.transcriber.export_txt(results, txt_p); self.transcriber.export_srt(results, srt_p)
-                
-                self.db.update_file_status(fid, "completed", txt_p, srt_p)
+
+                self.db.update_file_status(fid, "completed", txt_p, srt_p, duration=info.duration)
                 if fid in self.jobs_progress: del self.jobs_progress[fid]
-                
+
                 self.after(0, lambda: messagebox.showinfo("Vocius", f"Completato: {name}"))
                 self.after(0, lambda: self.select_view(f"detail_{fid}")) # Final refresh
-            except Exception as e: 
+            except Exception as e:
                 self.db.update_file_status(fid, "error")
                 if fid in self.jobs_progress: del self.jobs_progress[fid]
-                self.after(0, lambda: messagebox.showerror("Errore", str(e)))
-                
+                # bind di 'e' nel default: la variabile dell'except viene cancellata a fine blocco
+                self.after(0, lambda err=e: messagebox.showerror("Errore", str(err)))
+
         threading.Thread(target=run_task, daemon=True).start()
         return fid
 

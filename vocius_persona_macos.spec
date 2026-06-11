@@ -12,12 +12,22 @@ ctk_datas, ctk_binaries, ctk_hiddenimports = collect_all('customtkinter')
 whisper_datas, whisper_binaries, whisper_hiddenimports = collect_all('faster_whisper')
 ct2_datas, ct2_binaries, ct2_hiddenimports = collect_all('ctranslate2')
 
+# Diarizzazione (opzionale): pyannote.audio + torchaudio. Se non installati, il
+# build prosegue senza (la diarizzazione resta semplicemente non impacchettata).
+diar_datas, diar_binaries, diar_hiddenimports = [], [], []
+for _pkg in ('pyannote.audio', 'torchaudio', 'asteroid_filterbanks', 'lightning_fabric', 'pytorch_lightning'):
+    try:
+        _d, _b, _h = collect_all(_pkg)
+        diar_datas += _d; diar_binaries += _b; diar_hiddenimports += _h
+    except Exception as _e:
+        print(f"[spec] pacchetto diarizzazione non trovato, salto: {_pkg} ({_e})")
+
 added_files = [
     ('assets', 'assets'),
     ('model_cache', 'model_cache'),
-] + torch_datas + ctk_datas + whisper_datas + ct2_datas
+] + torch_datas + ctk_datas + whisper_datas + ct2_datas + diar_datas
 
-added_binaries = torch_binaries + ctk_binaries + whisper_binaries + ct2_binaries
+added_binaries = torch_binaries + ctk_binaries + whisper_binaries + ct2_binaries + diar_binaries
 
 # Aggiungiamo il database iniziale vuoto o esistente
 if os.path.exists('vocius_persona.db'):
@@ -42,8 +52,9 @@ a = Analysis(
         'core.hardware',
         'core.licensing',
         'core.transcriber',
-        'core.watcher'
-    ] + torch_hiddenimports + ctk_hiddenimports + whisper_hiddenimports + ct2_hiddenimports,
+        'core.watcher',
+        'core.diarizer'
+    ] + torch_hiddenimports + ctk_hiddenimports + whisper_hiddenimports + ct2_hiddenimports + diar_hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

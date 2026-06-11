@@ -5,7 +5,7 @@ import subprocess
 # No top-level import of faster_whisper to avoid startup delay
 
 class VociusTranscriber:
-    def __init__(self, model_size="large-v3", device="cuda", compute_type="float16"):
+    def __init__(self, model_size="zeus", device="cuda", compute_type="float16"):
         self.model_size = model_size
         self.device = device
         self.compute_type = compute_type
@@ -28,10 +28,11 @@ class VociusTranscriber:
             vocius_root = os.path.dirname(current_dir)
             self.cache_dir = os.path.join(vocius_root, "model_cache")
         
-        self.whisper_cache = os.path.join(self.cache_dir, "whisper")
-        if not os.path.exists(self.whisper_cache):
+        # Cartella dei modelli vocali Vocius ("Olympus")
+        self.engine_cache = os.path.join(self.cache_dir, "olympus")
+        if not os.path.exists(self.engine_cache):
             # Fallback for some bundle structures
-            self.whisper_cache = self.cache_dir 
+            self.engine_cache = self.cache_dir
 
     def load_model(self, progress_cb=None):
         from faster_whisper import WhisperModel
@@ -39,8 +40,8 @@ class VociusTranscriber:
         
         # Use local path if found in cache
         model_path = self.model_size
-        if self.whisper_cache:
-            potential_path = os.path.join(self.whisper_cache, self.model_size)
+        if self.engine_cache:
+            potential_path = os.path.join(self.engine_cache, self.model_size)
             if os.path.exists(potential_path):
                 model_path = potential_path
                 if progress_cb: progress_cb(0.15, "Modello trovato in cache locale (Offline OK)")
@@ -72,8 +73,15 @@ class VociusTranscriber:
                 progress_cb(min(pct, 0.9), f"Trascrizione in corso ({int(pct*100)}%)...")
 
         if diarize:
-            if progress_cb: progress_cb(0.92, "Diarizzazione in corso...")
-            pass
+            if progress_cb: progress_cb(0.92, "Riconoscimento interlocutori...")
+            try:
+                from core.diarizer import VociusDiarizer
+                diarizer = VociusDiarizer(cache_dir=self.cache_dir)
+                turns = diarizer.diarize(audio_path, progress_cb=progress_cb)
+                VociusDiarizer.assign_speakers(results, turns)
+            except Exception as e:
+                # La diarizzazione è opzionale: se fallisce non blocchiamo la trascrizione
+                if progress_cb: progress_cb(0.97, f"Diarizzazione non disponibile ({type(e).__name__})")
 
         if progress_cb: progress_cb(1.0, "Trascrizione completata!")
         return results, info

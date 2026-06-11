@@ -1,0 +1,52 @@
+name: Build macOS (Apple Silicon)
+
+# NOTA "universale Intel + Silicon": NON è ottenibile con questo stack.
+# PyTorch e CTranslate2 non pubblicano più binari x86_64/universal2 per macOS,
+# quindi questa build è Apple Silicon (arm64) — copre tutti i Mac dal 2020 (M1/M2/M3/M4).
+# Per l'Intel servirebbe un set di dipendenze vecchie e incompatibili con pyannote.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: macos-14            # runner Apple Silicon (arm64)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installa dipendenze (incluse quelle per la diarizzazione)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller Cython setuptools customtkinter faster-whisper \
+                      Pillow ffpyplayer pyjwt torch torchaudio "pyannote.audio" soundfile
+
+      - name: Protezione codice (Cython -> .so)
+        run: |
+          python setup_cython.py build_ext --inplace || true
+          # Guardia: se i .so non sono stati prodotti, fermati PRIMA di rimuovere i .py
+          ls core/*.so
+          rm -f core/database.py core/hardware.py core/licensing.py \
+                core/transcriber.py core/watcher.py core/diarizer.py
+
+      - name: Prepara model_cache (vuota: i modelli si scaricano da HuggingFace)
+        run: mkdir -p model_cache
+
+      - name: Build .app (PyInstaller)
+        run: pyinstaller --noconfirm vocius_persona_macos.spec
+
+      - name: Crea DMG
+        run: |
+          hdiutil create -volname "Vocius Persona" \
+            -srcfolder "dist/Vocius Persona.app" -ov -format UDZO "Vocius_Persona.dmg"
+
+      - name: Upload artifact (.dmg)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vocius-Persona-macOS-arm64
+          path: Vocius_Persona.dmg

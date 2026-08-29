@@ -1,6 +1,7 @@
 customtkinter
 faster-whisper
 pyjwt
+cryptography
 torch
 # For high-end UI icons
 Pillow

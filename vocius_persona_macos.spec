@@ -45,6 +45,7 @@ a = Analysis(
         'pygame',
         'jwt',
         'PyJWT',
+        'cryptography',
         'timeit',
         'pkg_resources',
         'shlex',

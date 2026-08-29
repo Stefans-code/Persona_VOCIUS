@@ -5,9 +5,20 @@ import uuid
 import jwt
 from datetime import datetime, timezone
 
-# --- SECRET KEY ---
-# Maintaining compatibility with the enterprise version
-LICENSE_SECRET = os.environ.get("VOCIUS_LICENSE_SECRET", "vocius_offline_secure_key_2026_x99")
+# --- SECURITY: RS256 (asymmetric), not the old shared HS256 secret ---
+# With HMAC the same secret both signs AND verifies — shipping it inside every installed
+# client meant anyone who extracted it could forge unlimited valid licenses for any HWID.
+# This is now a PUBLIC key: it can verify a signature but can't create one, so it's safe to
+# embed. The matching PRIVATE key lives only in the `sign-license` Edge Function's secrets.
+LICENSE_PUBLIC_KEY = os.environ.get("VOCIUS_LICENSE_PUBLIC_KEY", """-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz9Wiff+MVqgDalOKbonM
+qmvjZgEQx3IaCyl0aBkZykNQVhvjpd+zS/pOPlP5cb8gqwpk72qW4MoUK/vErWgW
+jEAaEDJ4S7kEhw39OwE9pY0EMB50WuLuJXKHDFZoOT8gn8nt4Q4z+LJuEd5LnF22
+eS1+o7mVIuOSmThl5hfdZTk5cQiIoINMJnsGO3lIgkLqc6rdhgl6W67O4/vIDJg+
+mcNC+Kw8Srh5GkJ6qORapRSXXnoN6HPoYR3EwJI4WAkGOagorVcKImseUIXaJ7FA
+6FGqCIX6WI2cA8m4xlBgAJMG5qgsTb0Rqrc/jDPAoj0vKNWkEOuGoDICCjw+Gtxr
+6wIDAQAB
+-----END PUBLIC KEY-----""")
 
 # Flag per non far comparire finestre console quando lanciamo subprocess su Windows
 _CREATE_NO_WINDOW = 0x08000000 if platform.system() == "Windows" else 0
@@ -193,7 +204,7 @@ def verify_license(license_path=None):
         with open(license_path, "r") as f:
             token = f.read().strip()
 
-        payload = jwt.decode(token, LICENSE_SECRET, algorithms=["HS256"])
+        payload = jwt.decode(token, LICENSE_PUBLIC_KEY, algorithms=["RS256"])
         details["hwid"] = payload.get("hwid") or details["hwid"]
         
         # Expiry check

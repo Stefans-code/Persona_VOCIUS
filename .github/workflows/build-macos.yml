@@ -34,7 +34,7 @@ jobs:
           rm -f core/database.py core/hardware.py core/licensing.py \
                 core/transcriber.py core/watcher.py core/diarizer.py
 
-      - name: Prepara model_cache (vuota: i modelli si scaricano da HuggingFace)
+      - name: "Prepara model_cache (vuota: i modelli si scaricano da HuggingFace)"
         run: mkdir -p model_cache
 
       - name: Build .app (PyInstaller)

@@ -1,7 +1,7 @@
 customtkinter
 faster-whisper
 pyjwt
-cryptography
+cryptography<49  # >=49 drops macOS x86_64 wheels entirely (arm64-only), forcing a from-source Rust build under Rosetta emulation on Intel CI
 torch
 # For high-end UI icons
 Pillow

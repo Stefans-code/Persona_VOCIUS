@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         ${{ matrix.prefix }} python -m pip install --upgrade pip
-        ${{ matrix.prefix }} pip install pyinstaller Cython setuptools customtkinter faster-whisper Pillow ffpyplayer pyjwt cryptography torch torchvision torchaudio ctranslate2 pyannote-audio asteroid-filterbanks pytorch-lightning
+        ${{ matrix.prefix }} pip install pyinstaller Cython setuptools customtkinter faster-whisper Pillow ffpyplayer pyjwt "cryptography<49" torch torchvision torchaudio ctranslate2 pyannote-audio asteroid-filterbanks pytorch-lightning
         
     - name: Create core binaries with Cython
       run: |

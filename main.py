@@ -467,7 +467,7 @@ class VociusPersonaApp(ctk.CTk):
             return tuple(int(x) for x in re.findall(r"\d+", str(v)))
 
         def check_upd_bg():
-            current_version = "1.0.1"
+            current_version = "1.0.2"
             try:
                 url = "https://nexflamma.net/vocius_version.json"
                 req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})

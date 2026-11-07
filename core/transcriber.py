@@ -34,17 +34,58 @@ class VociusTranscriber:
             # Fallback for some bundle structures
             self.engine_cache = self.cache_dir
 
+    MODEL_REPO = "Stegeno/Nexflamma_Models"   # cartelle olympus/hermes e olympus/zeus
+
+    @staticmethod
+    def user_models_dir():
+        """Cartella utente scrivibile per i modelli scaricati (non serve essere amministratore)."""
+        import sys
+        if sys.platform == "win32":
+            base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~\\AppData\\Local")
+            return os.path.join(base, "VociusPersona", "model_cache")
+        if sys.platform == "darwin":
+            return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "VociusPersona", "model_cache")
+        return os.path.join(os.path.expanduser("~"), ".vocius_persona", "model_cache")
+
+    def _find_local_model(self):
+        """Cerca il modello: cache inclusa nell'app, accanto all'eseguibile, cartella utente."""
+        import sys
+        candidates = [os.path.join(self.engine_cache, self.model_size),
+                      os.path.join(self.cache_dir, "olympus", self.model_size)]
+        if getattr(sys, "frozen", False):
+            candidates.append(os.path.join(os.path.dirname(sys.executable), "model_cache", "olympus", self.model_size))
+        candidates.append(os.path.join(self.user_models_dir(), "olympus", self.model_size))
+        for c in candidates:
+            if os.path.isfile(os.path.join(c, "model.bin")):
+                return c
+        return None
+
+    def _download_model(self, progress_cb=None):
+        # Nell'app senza console sys.stderr e' None: le barre tqdm di huggingface_hub andrebbero in errore
+        os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+        from huggingface_hub import snapshot_download
+        dest = self.user_models_dir()
+        os.makedirs(dest, exist_ok=True)
+        peso = {"zeus": "circa 3 GB", "hermes": "circa 1,5 GB"}.get(self.model_size, "")
+        if progress_cb:
+            progress_cb(0.12, f"Primo avvio: scarico il modello {self.model_size} ({peso}). Serve solo questa volta...")
+        snapshot_download(repo_id=self.MODEL_REPO, allow_patterns=[f"olympus/{self.model_size}/*"], local_dir=dest)
+        path = os.path.join(dest, "olympus", self.model_size)
+        if not os.path.isfile(os.path.join(path, "model.bin")):
+            raise RuntimeError(f"Download del modello {self.model_size} non riuscito: controlla la connessione e riprova.")
+        return path
+
     def load_model(self, progress_cb=None):
         from faster_whisper import WhisperModel
         if progress_cb: progress_cb(0.1, f"Caricamento modello {self.model_size}...")
         
-        # Use local path if found in cache
-        model_path = self.model_size
-        if self.engine_cache:
-            potential_path = os.path.join(self.engine_cache, self.model_size)
-            if os.path.exists(potential_path):
-                model_path = potential_path
-                if progress_cb: progress_cb(0.15, "Modello trovato in cache locale (Offline OK)")
+        model_path = self._find_local_model()
+        if model_path:
+            if progress_cb: progress_cb(0.15, "Modello trovato in cache locale (Offline OK)")
+        else:
+            # I modelli Olympus non sono dentro l'installer (pesano 1,5-3 GB): al primo uso si
+            # scaricano una volta sola da Hugging Face nella cartella utente, poi l'app lavora offline.
+            model_path = self._download_model(progress_cb)
 
         self.model = WhisperModel(model_path, device=self.device, compute_type=self.compute_type)
         if progress_cb: progress_cb(0.3, "Modello caricato.")

@@ -23,3 +23,7 @@ license.vocius
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Installer Windows
+installer_out/
+license_installer.txt

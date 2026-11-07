@@ -23,14 +23,21 @@ def get_resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # --- BRANDING VOCIUS ---
+# Identita' Nexflamma (uguale per tutti i prodotti): fiamma arancio su inchiostro.
+# Sul tema scuro il testo sopra l'arancio e' quasi nero (bianco su #ff5e1e fa solo 3.1:1).
 COLORS = {
-    "primary": "#6159E1",
-    "bg_main": ("#F8F9FA", "#1A1B1E"),      # Light grey, Darker grey
-    "bg_sidebar": ("#FFFFFF", "#25262B"),
-    "card_bg": ("#FFFFFF", "#25262B"),
-    "text": ("#292D32", "#C1C2C5"),
-    "text_sec": ("#697077", "#909296"),
-    "border": ("#EBEDF2", "#373A40"),
+    "primary": ("#c2410c", "#ff5e1e"),
+    "primary_hover": ("#9a3412", "#ff7a45"),
+    "on_primary": ("#ffffff", "#0a0a0a"),
+    "primary_soft": ("#ffedd5", "#2a1408"),
+    "primary_text": ("#9a3412", "#ff8a57"),
+    "hover_neutral": ("#F3F0EA", "#1A1F2B"),
+    "bg_main": ("#F6F4F0", "#05070A"),
+    "bg_sidebar": ("#FFFFFF", "#0D1017"),
+    "card_bg": ("#FFFFFF", "#0D1017"),
+    "text": ("#14110F", "#E6E8EB"),
+    "text_sec": ("#5F5A55", "#9CA3AF"),
+    "border": ("#E7E2D8", "#1F2533"),
     "status_ok": "#10B981",
     "status_ok_light": ("#E6F6F1", "#102F26"),
     "danger": "#EF4444",
@@ -114,6 +121,7 @@ class VociusPersonaApp(ctk.CTk):
         dot_color = COLORS["status_ok"] if self.is_licensed else COLORS["danger"]
         ctk.CTkFrame(header_frame, width=8, height=8, corner_radius=4, fg_color=dot_color).pack(anchor="w", pady=(0, 5))
         ctk.CTkLabel(header_frame, text="Vocius", font=("Inter", 26, "bold"), text_color=COLORS["primary"]).pack(anchor="w")
+        ctk.CTkLabel(header_frame, text="un prodotto Nexflamma", font=("Inter", 11), text_color=COLORS["text_sec"]).pack(anchor="w")
 
         # Menu Items
         self.nav_btns = {}
@@ -125,7 +133,7 @@ class VociusPersonaApp(ctk.CTk):
         ctk.CTkLabel(folder_header, text="CARTELLE", font=("Inter", 10, "bold"), text_color=COLORS["text_sec"]).pack(side="left")
         
         btn_new_folder = ctk.CTkButton(folder_header, text="+", width=20, height=20, fg_color="transparent", text_color=COLORS["primary"],
-                                      hover_color="#F3F4F6", font=("Inter", 14, "bold"), command=self.create_folder_dialog)
+                                      hover_color=COLORS["hover_neutral"], font=("Inter", 14, "bold"), command=self.create_folder_dialog)
         btn_new_folder.pack(side="right")
 
         # Dynamic Folders
@@ -138,7 +146,7 @@ class VociusPersonaApp(ctk.CTk):
         footer.pack(side="bottom", fill="x", padx=15, pady=20)
         
         self.btn_theme = ctk.CTkButton(footer, text="Dark Mode", font=("Inter", 13), fg_color="transparent", text_color=COLORS["text"],
-                                      hover_color="#F3F4F6", anchor="w", command=self.toggle_theme)
+                                      hover_color=COLORS["hover_neutral"], anchor="w", command=self.toggle_theme)
         self.btn_theme.pack(fill="x", pady=2)
         
         # IMPOSTAZIONI va al posto di esci
@@ -147,7 +155,7 @@ class VociusPersonaApp(ctk.CTk):
     def add_nav_item(self, view_id, label, parent=None, id=None):
         target = parent if parent else self.sidebar
         btn = ctk.CTkButton(target, text=label, font=("Inter", 14), height=42, corner_radius=10,
-                           fg_color="transparent", text_color=COLORS["text"], hover_color="#F3F4F6", anchor="w",
+                           fg_color="transparent", text_color=COLORS["text"], hover_color=COLORS["hover_neutral"], anchor="w",
                            command=lambda: self.select_view(view_id))
         btn.pack(fill="x", padx=15, pady=2)
         self.nav_btns[id if id else view_id] = btn
@@ -174,7 +182,7 @@ class VociusPersonaApp(ctk.CTk):
         # Update Nav
         for nid, btn in self.nav_btns.items():
             if nid == target_nav_id: 
-                btn.configure(fg_color="#EEEDFD", text_color=COLORS["primary"], font=("Inter", 14, "bold"))
+                btn.configure(fg_color=COLORS["primary_soft"], text_color=COLORS["primary_text"], font=("Inter", 14, "bold"))
             else: 
                 btn.configure(fg_color="transparent", text_color=COLORS["text"], font=("Inter", 14))
 
@@ -199,7 +207,7 @@ class VociusPersonaApp(ctk.CTk):
         btn_bar.grid(row=2, column=0, sticky="ew", pady=(0, 30))
 
         btn_upload = ctk.CTkButton(btn_bar, text="Carica nuovo file", font=("Inter", 14, "bold"), height=48, width=200,
-                                  fg_color=COLORS["primary"], corner_radius=24, hover_color="#4F46E5",
+                                  fg_color=COLORS["primary"], corner_radius=24, hover_color=COLORS["primary_hover"], text_color=COLORS["on_primary"],
                                   command=self.show_upload_modal)
         btn_upload.pack(side="left")
 
@@ -245,7 +253,7 @@ class VociusPersonaApp(ctk.CTk):
             lbl_name.bind("<Button-1>", lambda e, f=fid: self.select_view(f"detail_{f}"))
             
             ctk.CTkLabel(table_card, text=date, font=("Inter", 13), text_color=COLORS["text_sec"]).grid(row=row_idx, column=2, padx=20, sticky="w")
-            ctk.CTkLabel(table_card, text=ftype.upper(), font=("Inter", 11, "bold"), fg_color="#F3F4F6", text_color=COLORS["text_sec"], corner_radius=6).grid(row=row_idx, column=3, padx=20, sticky="w")
+            ctk.CTkLabel(table_card, text=ftype.upper(), font=("Inter", 11, "bold"), fg_color=COLORS["hover_neutral"], text_color=COLORS["text_sec"], corner_radius=6).grid(row=row_idx, column=3, padx=20, sticky="w")
             
             btn_del = ctk.CTkButton(table_card, text="🗑", width=35, height=35, fg_color="transparent", text_color=COLORS["danger"], hover_color="#FEE2E2", 
                                    command=lambda f=fid: self.delete_file(f))
@@ -285,7 +293,7 @@ class VociusPersonaApp(ctk.CTk):
             self.setup_sidebar()
             modal.destroy()
         
-        btn_save = ctk.CTkButton(modal, text="Crea Cartella", fg_color=COLORS["primary"], height=40, command=save)
+        btn_save = ctk.CTkButton(modal, text="Crea Cartella", fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], text_color=COLORS["on_primary"], height=40, command=save)
         btn_save.pack(pady=10)
         
     def show_bulk_move_modal(self):
@@ -311,7 +319,7 @@ class VociusPersonaApp(ctk.CTk):
             self.view_dashboard()
             self.setup_sidebar()
 
-        ctk.CTkButton(modal, text="Conferma Spostamento", fg_color=COLORS["primary"], height=40, command=confirm).pack(pady=20)
+        ctk.CTkButton(modal, text="Conferma Spostamento", fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], text_color=COLORS["on_primary"], height=40, command=confirm).pack(pady=20)
 
     def show_upload_modal(self):
         modal = ctk.CTkToplevel(self)
@@ -409,7 +417,7 @@ class VociusPersonaApp(ctk.CTk):
             job_id = self.start_transcription_job(path, folder_id=fid, language=language, model_size=model_size, diarize=diarize)
             self.select_view(f"detail_{job_id}")
 
-        btn_start = ctk.CTkButton(actions, text="Avvia Trascrizione", font=("Inter", 14, "bold"), fg_color=COLORS["primary"], height=44, corner_radius=8, command=start)
+        btn_start = ctk.CTkButton(actions, text="Avvia Trascrizione", font=("Inter", 14, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], text_color=COLORS["on_primary"], height=44, corner_radius=8, command=start)
         btn_start.pack(side="right")
         
         btn_cancel = ctk.CTkButton(actions, text="Annulla", font=("Inter", 13), fg_color="transparent", text_color=COLORS["text"], width=100, command=modal.destroy)
@@ -445,7 +453,7 @@ class VociusPersonaApp(ctk.CTk):
         upd_card.grid(row=3, column=0, sticky="ew", pady=10)
         ctk.CTkLabel(upd_card, text="AGGIORNAMENTI", font=("Inter", 11, "bold"), text_color=COLORS["text_sec"]).pack(anchor="w", padx=20, pady=(20, 10))
         ctk.CTkLabel(upd_card, text="Versione corrente: v1.0.0", font=("Inter", 13)).pack(anchor="w", padx=20)
-        self.btn_check_upd = ctk.CTkButton(upd_card, text="Verifica Aggiornamenti", font=("Inter", 13, "bold"), fg_color=COLORS["primary"], command=self.check_software_updates)
+        self.btn_check_upd = ctk.CTkButton(upd_card, text="Verifica Aggiornamenti", font=("Inter", 13, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], text_color=COLORS["on_primary"], command=self.check_software_updates)
         self.btn_check_upd.pack(fill="x", padx=20, pady=20)
 
     def check_software_updates(self):
@@ -542,7 +550,7 @@ class VociusPersonaApp(ctk.CTk):
         ctk.CTkLabel(header, text=data['name'], font=("Inter", 26, "bold"), text_color=COLORS["text"]).pack(side="left")
         
         status_color = COLORS["status_ok"] if data['status'] == 'completed' else COLORS["primary"]
-        status_badge = ctk.CTkFrame(header, fg_color=COLORS["status_ok_light"] if data['status'] == 'completed' else "#EEEDFD", corner_radius=6)
+        status_badge = ctk.CTkFrame(header, fg_color=COLORS["status_ok_light"] if data['status'] == 'completed' else COLORS["primary_soft"], corner_radius=6)
         status_badge.pack(side="left", padx=20)
         ctk.CTkLabel(status_badge, text=f"Stato: {data['status'].upper()}", font=("Inter", 11, "bold"), text_color=status_color).pack(padx=10, pady=2)
         
@@ -615,7 +623,7 @@ class VociusPersonaApp(ctk.CTk):
         src_box.pack(fill="x", padx=20, pady=10)
         ctk.CTkCheckBox(src_box, text="Tutte le fonti", font=("Inter", 12), border_width=2).pack(padx=15, pady=15, anchor="w")
         
-        btn_dl = ctk.CTkButton(export_card, text="Scarica", font=("Inter", 14, "bold"), fg_color=COLORS["primary"], height=42, command=lambda: messagebox.showinfo("Esporta", f"Download avviato: {fmt_menu.get()}"))
+        btn_dl = ctk.CTkButton(export_card, text="Scarica", font=("Inter", 14, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], text_color=COLORS["on_primary"], height=42, command=lambda: messagebox.showinfo("Esporta", f"Download avviato: {fmt_menu.get()}"))
         btn_dl.pack(fill="x", padx=20, pady=(10, 20))
 
     def start_transcription_job(self, path, folder_id=None, language=None, model_size=None, diarize=False):

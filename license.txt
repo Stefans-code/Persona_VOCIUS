@@ -1,25 +1,72 @@
-CONTRATTO DI LICENZA CON L'UTENTE FINALE (EULA) - VOCIUS
+VOCIUS - CONTRATTO DI LICENZA CON L'UTENTE FINALE (EULA)
 
-Il presente Contratto di Licenza con l'Utente Finale ("Contratto") è un accordo legale tra l'utente (persona fisica o giuridica) e Stefano Zanoni ("Editore") per il software Vocius ("Software").
-
-Installando o utilizzando il Software, l'utente accetta di essere vincolato dai termini del presente Contratto. Se l'utente non accetta i termini del presente Contratto, non deve installare o utilizzare il Software.
+Il presente Contratto di Licenza ("Contratto") è stipulato tra l'utente (persona fisica o giuridica) e Nexflamma ("Licenziante"; dati identificativi su https://nexflamma.net/#/legal, contatto: privacy@nexflamma.net) per il software "Vocius" ("Software"). Installando o utilizzando il Software l'utente accetta il presente Contratto. Il testo italiano prevale sulla traduzione inglese.
 
 1. CONCESSIONE DELLA LICENZA
-L'Editore concede all'utente una licenza non esclusiva e non trasferibile per installare e utilizzare il Software sul proprio computer per finalità di trascrizione e gestione audio.
+Il Licenziante concede una licenza d'uso limitata, non esclusiva e non trasferibile per installare e utilizzare il Software su un solo computer, collegata a una chiave di licenza valida associata all'identificativo hardware (HWID) del computer. Se la licenza è acquistata in abbonamento, vale per il periodo pagato: dopo la disdetta resta attiva fino alla fine di quel periodo e poi cessa. Rinnovo, prezzo e diritto di recesso sono regolati dalle condizioni di vendita pubblicate su nexflamma.net al momento dell'acquisto.
 
-2. RESTRIZIONI
-L'utente non può:
-a) Decodificare, decompilare o disassemblare il Software (salvo quanto espressamente consentito dalla legge applicabile).
-b) Distribuire, noleggiare, concedere in sublicenza o prestare il Software a terzi senza previo consenso scritto dell'Editore.
-c) Rimuovere o alterare qualsiasi avviso di copyright o marchio registrato.
+2. HWID, VERIFICA DELLA LICENZA E DATI PERSONALI
+Per verificare la licenza il Software calcola un identificativo hardware (HWID) e lo invia al server di licenze del Licenziante per controllare che la licenza sia valida e non revocata; controlla inoltre la presenza di aggiornamenti su nexflamma.net. Questi dati sono trattati solo per la gestione delle licenze e degli aggiornamenti, come descritto nell'informativa privacy (https://nexflamma.net/#/privacy). I file audio e video, le trascrizioni e il riconoscimento dei parlanti vengono elaborati esclusivamente sul computer dell'utente e non vengono inviati al Licenziante.
 
-3. PROPRIETÀ INTELLETTUALE
-Il Software è protetto dalle leggi sul copyright e dai trattati internazionali. Il Software viene concesso in licenza, non venduto. Tutti i diritti, titoli e interessi relativi al Software rimangono di proprietà di Stefano Zanoni.
+3. LIMITAZIONI
+L'utente non può: (a) modificare, tradurre, decompilare o disassemblare il Software, salvo nei casi espressamente consentiti da norme inderogabili (artt. 64-ter e 64-quater L. 633/1941, ad esempio per l'interoperabilità); (b) aggirare le misure tecniche di protezione della licenza; (c) distribuire, vendere, noleggiare o concedere in sublicenza il Software o le chiavi di licenza; (d) rimuovere o alterare gli avvisi di copyright o di marchio.
 
-4. LIMITAZIONE DI RESPONSABILITÀ
-Il Software viene fornito "così com'è", senza garanzie di alcun tipo. In nessun caso l'Editore sarà responsabile per danni derivanti dall'uso o dall'impossibilità di usare il Software.
+4. COMPONENTI DI TERZE PARTI
+Il Software include e scarica componenti e modelli di intelligenza artificiale di terze parti (ad esempio per la trascrizione e il riconoscimento dei parlanti), distribuiti con le rispettive licenze open source, elencate nel file delle licenze di terze parti fornito con il Software e sulla pagina dei modelli. Per tali componenti valgono le rispettive licenze, che prevalgono sul presente Contratto; le limitazioni del punto 3 non si applicano a essi.
 
-5. LEGGE APPLICABILE
-Il presente Contratto è regolato dalle leggi dello Stato Italiano.
+5. PROPRIETÀ INTELLETTUALE
+Il Software è protetto dal diritto d'autore e viene concesso in licenza, non venduto. Tutti i diritti non espressamente concessi sono riservati al Licenziante. I file dell'utente e le trascrizioni prodotte con il Software restano dell'utente.
 
-Copyright (c) 2026 Stefano Zanoni. Tutti i diritti riservati.
+6. TRASCRIZIONI GENERATE DALL'INTELLIGENZA ARTIFICIALE E REGISTRAZIONI DI TERZI
+Le trascrizioni e l'attribuzione dei parlanti sono generate automaticamente e possono contenere errori: l'utente deve verificarle prima di farvi affidamento, in particolare per usi legali, medici o professionali. L'utente che trascrive registrazioni contenenti la voce o i dati di altre persone è responsabile di farlo nel rispetto della legge e della normativa sulla protezione dei dati personali (per esempio informando o chiedendo il consenso ai partecipanti quando necessario).
+
+7. GARANZIA
+Nei limiti consentiti dalla legge, il Software è fornito "così com'è", senza garanzie ulteriori rispetto a quelle previste per legge. Se l'utente è un consumatore, restano salvi tutti i diritti che gli spettano per legge, inclusa la garanzia legale di conformità per i contenuti e servizi digitali prevista dal Codice del Consumo (D.Lgs. 206/2005).
+
+8. LIMITAZIONE DI RESPONSABILITÀ
+Nei limiti consentiti dalla legge, il Licenziante non risponde di danni indiretti o consequenziali, inclusa la perdita di dati, derivanti dall'uso o dal mancato uso del Software. Si consiglia di conservare sempre copie di backup dei propri file. La limitazione non si applica in caso di dolo o colpa grave, ai danni alla persona, né quando la legge non la consente.
+
+9. AGGIORNAMENTI E RISOLUZIONE
+Il Licenziante può rilasciare aggiornamenti, che sono regolati dal presente Contratto. Il Contratto vale fino alla sua risoluzione; in caso di violazione dei suoi termini i diritti dell'utente cessano e il Licenziante può revocare la licenza.
+
+10. LEGGE APPLICABILE E FORO
+Il Contratto è regolato dalla legge italiana. Per le controversie è competente il foro del Licenziante, salvo che l'utente sia un consumatore: in tal caso è competente il foro del luogo di residenza o domicilio del consumatore.
+
+Copyright (c) 2026 Nexflamma. Tutti i diritti riservati.
+
+
+VOCIUS - END USER LICENSE AGREEMENT (EULA) - ENGLISH TRANSLATION
+
+This Agreement is between you (an individual or a legal entity) and Nexflamma ("Licensor"; identification details at https://nexflamma.net/#/legal, contact: privacy@nexflamma.net) for the software "Vocius" ("Software"). By installing or using the Software you accept this Agreement. The Italian text prevails over this translation.
+
+1. LICENSE GRANT
+The Licensor grants you a limited, non-exclusive, non-transferable license to install and use the Software on a single computer, subject to a valid license key tied to the computer's hardware identifier (HWID). If the license is bought as a subscription, it is valid for the paid period: after cancellation it stays active until the end of that period and then ends. Renewal, price and the right of withdrawal are governed by the terms of sale published on nexflamma.net at the time of purchase.
+
+2. HWID, LICENSE CHECK AND PERSONAL DATA
+To check the license the Software computes a hardware identifier (HWID) and sends it to the Licensor's license server to verify that the license is valid and not revoked; it also checks nexflamma.net for updates. This data is processed only to manage licenses and updates, as described in the privacy notice (https://nexflamma.net/#/privacy). Audio and video files, transcripts and speaker recognition are processed only on your computer and are never sent to the Licensor.
+
+3. RESTRICTIONS
+You may not: (a) modify, translate, decompile or disassemble the Software, except where expressly permitted by mandatory law (Arts. 64-ter and 64-quater of Italian Law 633/1941, e.g. for interoperability); (b) circumvent the technical license protection; (c) distribute, sell, rent or sublicense the Software or license keys; (d) remove or alter copyright or trademark notices.
+
+4. THIRD-PARTY COMPONENTS
+The Software includes and downloads third-party components and AI models (for example for transcription and speaker recognition), distributed under their own open source licenses, listed in the third-party license file provided with the Software and on the model page. Those licenses apply to such components and prevail over this Agreement; the restrictions in section 3 do not apply to them.
+
+5. INTELLECTUAL PROPERTY
+The Software is protected by copyright and is licensed, not sold. All rights not expressly granted are reserved to the Licensor. Your files and the transcripts produced with the Software remain yours.
+
+6. AI-GENERATED TRANSCRIPTS AND THIRD-PARTY RECORDINGS
+Transcripts and speaker attribution are generated automatically and may contain errors: you must check them before relying on them, especially for legal, medical or professional use. If you transcribe recordings containing other people's voices or data, you are responsible for complying with the law and data protection rules (for example by informing participants or asking for their consent where required).
+
+7. WARRANTY
+To the extent permitted by law, the Software is provided "as is", without warranties beyond those required by law. If you are a consumer, all your statutory rights remain unaffected, including the legal guarantee of conformity for digital content and services under the Italian Consumer Code (Legislative Decree 206/2005).
+
+8. LIMITATION OF LIABILITY
+To the extent permitted by law, the Licensor is not liable for indirect or consequential damages, including data loss, arising from the use of or inability to use the Software. Always keep backup copies of your files. This limitation does not apply in case of willful misconduct or gross negligence, personal injury, or where the law does not allow it.
+
+9. UPDATES AND TERMINATION
+The Licensor may release updates, which are governed by this Agreement. This Agreement remains in force until terminated; if you breach its terms your rights end and the Licensor may revoke the license.
+
+10. GOVERNING LAW AND JURISDICTION
+This Agreement is governed by Italian law. The courts of the Licensor's seat have jurisdiction, unless you are a consumer, in which case the courts of your place of residence or domicile have jurisdiction.
+
+Copyright (c) 2026 Nexflamma. All rights reserved.

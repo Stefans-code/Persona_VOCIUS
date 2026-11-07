@@ -12,7 +12,9 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14            # runner Apple Silicon (arm64)
+    runs-on: macos-15            # runner Apple Silicon (arm64); macOS 14 ritirato il 2/11/2026
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "14.0"
     steps:
       - uses: actions/checkout@v4
 

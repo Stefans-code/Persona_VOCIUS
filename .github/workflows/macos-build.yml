@@ -10,13 +10,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - runner: macos-14
+          - runner: macos-15
             arch: Intel
             prefix: "arch -x86_64"
-          - runner: macos-14
+          - runner: macos-15
             arch: AppleSilicon
             prefix: ""
     runs-on: ${{ matrix.runner }}
+    # macOS 14 ritirato da GitHub il 2/11/2026: si compila su macOS 15 ma per macOS 14+.
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "14.0"
     
     steps:
     - uses: actions/checkout@v4
